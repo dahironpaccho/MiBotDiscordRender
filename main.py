@@ -1,17 +1,15 @@
 import discord
 from discord.ext import commands
 from discord import app_commands
-import os # ¡Añadida esta línea para poder leer variables de entorno!
+import os
+from keep_alive import keep_alive # ¡Añade esta línea!
 
 # --- Configuración de Intenciones (Intents) ---
-# Las intenciones son permisos que tu bot necesita para acceder a ciertos eventos de Discord.
 intents = discord.Intents.default()
-intents.message_content = True # Necesario para leer el contenido de los mensajes (aunque para slash commands no siempre es imprescindible, es buena práctica)
-intents.members = True        # Necesario para gestionar miembros (como asignar roles)
+intents.message_content = True
+intents.members = True
 
 # --- Inicialización del Bot ---
-# 'command_prefix="!"' significa que tu bot responderá a comandos como '!mi_comando'.
-# Sin embargo, el comando '/anuncio' es un Slash Command, que no usa este prefijo.
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 # --- IDs Importantes de tu Servidor (¡ACTUALIZA ESTOS VALORES!) ---
@@ -88,7 +86,7 @@ async def enviar_reglas():
             "Pregunta con respeto.\n\n"
             "*Haz clic en el botón de abajo para aceptar las reglas y unirte a la pandilla 👇*"
         ),
-        color=discord.Color.blue() # ⬅️ CAMBIADO A AZUL
+        color=discord.Color.blue()
     )
     embed.set_footer(text="Gracias por formar parte de la comunidad 💙 by: pablito")
 
@@ -165,7 +163,7 @@ async def anuncio(interaction: discord.Interaction, mensaje: str):
             embed = discord.Embed(
                 title="📢 Anuncio Oficial",
                 description=mensaje,
-                color=discord.Color.blue() # ⬅️ CAMBIADO A AZUL
+                color=discord.Color.blue()
             )
             # embed.set_footer(text=f"Publicado por {interaction.user.display_name}") # Comentado como solicitaste
             await canal_destino.send(embed=embed)
@@ -178,6 +176,5 @@ async def anuncio(interaction: discord.Interaction, mensaje: str):
         await interaction.response.send_message("❌ Hubo un error al intentar enviar el anuncio. Consulta la consola del bot.", ephemeral=True)
 
 # --- Ejecución del Bot (¡MODIFICADO PARA USAR EL TOKEN SEGURO!) ---
-# ¡IMPORTANTE! El token se obtiene de las Variables de Entorno (Secrets).
-# NUNCA compartas tu token públicamente.
+keep_alive() # ¡Añade esta línea aquí!
 bot.run(os.getenv("DISCORD_BOT_TOKEN"))
