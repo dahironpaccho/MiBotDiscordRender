@@ -36,16 +36,19 @@ CANALES_TEXTO_PLANO_BOLD_IDS = [
 # ID del canal específico de Robux que mencionaste, donde quieres que funcione el anuncio directamente
 CANAL_ANUNCIOS_ROBUX_ID = 1379229048487677972
 
+# ¡NUEVO! ID del rol permitido para usar el comando /anuncio
+ROL_ANUNCIO_PERMITIDO_ID = 1378977225776304169
+
 
 # --- Evento: Cuando el Bot Está Listo ---
 @bot.event
 async def on_ready():
     """Se ejecuta cuando el bot se conecta a Discord."""
     print(f"✅ Bot conectado como {bot.user}")
-    
+
     # Intenta enviar el mensaje de reglas al inicio.
     await enviar_reglas()
-    
+
     # Sincroniza los comandos de barra diagonal (slash commands) con Discord.
     # Es crucial para que los comandos como '/anuncio' aparezcan y funcionen.
     try:
@@ -61,7 +64,7 @@ async def enviar_reglas():
     if canal is None:
         print("❌ Canal de reglas no encontrado. Verifica CANAL_REGLAS_ID.")
         return
-        
+
     # Comprueba si el mensaje de reglas ya existe para evitar duplicados.
     async for mensaje in canal.history(limit=10): # Busca en los últimos 10 mensajes
         # Asegúrate de que el embed existe y tiene un título antes de intentar acceder a él
@@ -107,7 +110,7 @@ class BotonRolView(discord.ui.View):
         """Callback que se ejecuta cuando el botón 'Aceptar Reglas' es presionado."""
         # Obtiene el objeto del rol en el servidor.
         rol = interaction.guild.get_role(ROL_ID)
-        
+
         # Verifica si el usuario ya tiene el rol.
         if rol in interaction.user.roles:
             await interaction.response.send_message("¡Ya tienes el rol, dibujito!", ephemeral=True)
@@ -120,6 +123,7 @@ class BotonRolView(discord.ui.View):
 # Este comando permite enviar anuncios. Su comportamiento depende del canal de uso.
 @bot.tree.command(name="anuncio", description="Envía un anuncio con formato especial o general.")
 @app_commands.describe(mensaje="El contenido del anuncio.")
+@app_commands.has_role(ROL_ANUNCIO_PERMITIDO_ID) # ¡NUEVO! Solo este rol puede usar /anuncio
 async def anuncio(interaction: discord.Interaction, mensaje: str):
     """
     Comando para enviar un anuncio.
@@ -130,7 +134,7 @@ async def anuncio(interaction: discord.Interaction, mensaje: str):
     try:
         # Canal desde donde se ejecutó el comando
         canal_de_ejecucion_id = interaction.channel_id
-        
+
         # Definir el canal de destino
         canal_destino = None
 
@@ -148,7 +152,7 @@ async def anuncio(interaction: discord.Interaction, mensaje: str):
             # Si el comando se usa en un canal no especificado, por defecto se envía al canal general de anuncios
             canal_destino = bot.get_channel(CANAL_ANUNCIOS_GENERAL_ID)
             formato_especial = False
-            
+
         # --- Verificación del canal de destino ---
         if canal_destino is None:
             await interaction.response.send_message("❌ No se encontró el canal de destino para el anuncio. Verifica los IDs de los canales.", ephemeral=True)
@@ -167,13 +171,25 @@ async def anuncio(interaction: discord.Interaction, mensaje: str):
             )
             # embed.set_footer(text=f"Publicado por {interaction.user.display_name}") # Comentado como solicitaste
             await canal_destino.send(embed=embed)
-        
+
         # Confirmación al usuario
         await interaction.response.send_message(f"✅ ¡Anuncio enviado con éxito a {canal_destino.mention}!", ephemeral=True)
 
     except Exception as e:
         print(f"❌ Error en el comando /anuncio: {e}")
         await interaction.response.send_message("❌ Hubo un error al intentar enviar el anuncio. Consulta la consola del bot.", ephemeral=True)
+
+# --- Manejo de errores para comandos de barra diagonal (Slash Commands) ---
+@bot.tree.error
+async def on_app_command_error(interaction: discord.Interaction, error: app_commands.AppCommandError):
+    if isinstance(error, app_commands.MissingRole):
+        # Envía un mensaje si el usuario no tiene el rol necesario
+        await interaction.response.send_message(f"❌ ¡Lo siento, {interaction.user.mention}! No tienes el rol necesario para usar este comando.", ephemeral=True)
+    else:
+        # Para otros errores, envía un mensaje genérico y loguéalos para depuración
+        print(f"❌ Error en un comando de barra diagonal: {error}")
+        await interaction.response.send_message("❌ Hubo un error al ejecutar este comando. Inténtalo de nuevo más tarde.", ephemeral=True)
+
 
 # --- Ejecución del Bot (¡MODIFICADO PARA USAR EL TOKEN SEGURO!) ---
 keep_alive() # ¡Añade esta línea aquí!
