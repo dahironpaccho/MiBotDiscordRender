@@ -91,7 +91,7 @@ class BotonRolView(discord.ui.View):
 # --- Slash Command: /anuncio ---
 @bot.tree.command(name="anuncio", description="Envía un anuncio con formato especial o general.")
 @app_commands.describe(mensaje="El contenido del anuncio.")
-@app_commands.has_role(ROL_ANUNCIO_PERMITIDO_ID)
+@app_commands.checks.has_role(ROL_ANUNCIO_PERMITIDO_ID) # <-- ¡ESTE ES EL CAMBIO SOLUCIONADO!
 async def anuncio(interaction: discord.Interaction, mensaje: str):
     try:
         canal_de_ejecucion_id = interaction.channel_id
